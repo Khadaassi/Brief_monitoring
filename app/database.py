@@ -4,14 +4,11 @@ Ce module gère la connexion à la base de données PostgreSQL
 et fournit une fonction générateur pour obtenir des sessions de base de données.
 """
 
-from sqlmodel import create_engine, Session
 import os
-import sys
-from typing import Generator
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/items_db"
-)
+from sqlmodel import Session, create_engine
+
+DATABASE_URL = os.getenv("DATABASE_URL", None)
 
 POOL_SIZE = 10
 

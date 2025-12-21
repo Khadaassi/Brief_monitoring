@@ -16,7 +16,7 @@ diagrams_src/
 # Test database
 test.db
 *.db
-
+OLD/
 # IDE
 .vscode/
 .idea/
