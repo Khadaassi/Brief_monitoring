@@ -1,0 +1,29 @@
+groups:
+  - name: api_alerts
+    rules:
+      - alert: ApiDown
+        expr: up{job="fastapi"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "API down"
+          description: "Prometheus ne peut plus scraper l'API (job=fastapi)."
+
+      - alert: HighHttp5xxRate
+        expr: (sum(rate(http_requests_total{job="fastapi",status=~"5.."}[2m])) / sum(rate(http_requests_total{job="fastapi"}[2m]))) * 100 > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate"
+          description: "Plus de 5% d'erreurs 5xx sur 2 minutes."
+
+      - alert: HighDbLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le)) > 0.2
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DB latency P95 high"
+          description: "La latence DB P95 dépasse 200ms sur 5 minutes."
