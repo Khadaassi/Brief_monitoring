@@ -1,20 +1,17 @@
 from contextlib import asynccontextmanager
-import os
-import sys
 from fastapi import FastAPI
 from sqlmodel import SQLModel
-import json
-from typing import Dict, Any
-from app.database import engine
-from app.routes import items_router
 
-DEBUG_MODE = True
-UNUSED_VAR = "cette variable n'est jamais utilisée"
+from app.database import engine
+from app.routes.items import router as items_router
+from prometheus_fastapi_instrumentator import Instrumentator
+from app.monitoring.metrics import app_info
 
 
 @asynccontextmanager
-async def lifespan(fastapi_app: FastAPI):
+async def lifespan(app: FastAPI):
     SQLModel.metadata.create_all(engine)
+    app_info.info({"version": "1.0.0", "environment": "development"})
     yield
 
 
@@ -24,6 +21,14 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Instrumentation /metrics
+Instrumentator(
+    should_group_status_codes=False,
+    should_ignore_untemplated=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=["/metrics"],
+).instrument(app).expose(app, endpoint="/metrics")
 
 app.include_router(items_router)
 
@@ -36,9 +41,3 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "healthy"}
-
-
-secret = "fezffzefzefzlfzhfzfzfjzfzfzfdzgerg54g651fzefg51zeg5g"
-API_KEY = "sk-1234567890abcdef"
-
-very_long_variable_name_that_exceeds_line_length = "Cette ligne est intentionnellement trop longue pour violer les règles de formatage standard"

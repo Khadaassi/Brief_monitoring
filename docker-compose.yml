@@ -1,31 +1,37 @@
-version: '3.8'
-
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: items_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   api:
     build: .
+    container_name: fastapi_api
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: ${DATABASE_URL}
-    depends_on:
-      db:
-        condition: service_healthy
+      # Option simple: SQLite dans le conteneur
+      - DATABASE_URL=sqlite:///./app.db
+    volumes:
+      # Persiste le sqlite si tu veux garder les données entre redémarrages
+      - api_data:/app
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+    networks:
+      - monitoring
 
 volumes:
-  postgres_data:
+  prometheus_data:
+  api_data:
+
+networks:
+  monitoring:
+    driver: bridge

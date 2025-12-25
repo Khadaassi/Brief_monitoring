@@ -8,7 +8,7 @@ import os
 
 from sqlmodel import Session, create_engine
 
-DATABASE_URL = os.getenv("DATABASE_URL", None)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./app.db")
 
 POOL_SIZE = 10
 

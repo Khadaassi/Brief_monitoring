@@ -1,23 +1,18 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    gcc \
-    libpq-dev \
-    postgresql-client \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Install uv
+RUN pip install --no-cache-dir uv
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Copy project
+COPY . /app
 
-ENV UV_SYSTEM_PYTHON=1
-
-COPY pyproject.toml .
-RUN uv pip install -e .
-
-COPY . .
+# Install dependencies from pyproject/uv lock
+# (uv gère l'environnement dans l'image)
+RUN uv sync
 
 EXPOSE 8000
 
-CMD ["fastapi", "run", "app/main.py", "--port", "8000"]
+# Lance uvicorn via uv (pour utiliser les deps installées par uv)
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
