@@ -61,3 +61,28 @@ Quels sont les dashboards anti-patterns à éviter ?
 * Panels non actionnables (beau mais ne répond pas à “est-ce que ça va ?” et “où est le problème ?”).
 * Mélanger des échelles incomparables sur un même graphe sans logique.
 * Time range/interval mal réglés (trop zoomé → bruit, trop large → tout est lissé).
+
+# Veille Observabilité (Phase 2)
+
+## Monitoring vs Observabilité
+- Monitoring : vérifier l’état d’un système via des signaux connus (up/down, seuils, alertes).
+- Observabilité : capacité à comprendre pourquoi un système se comporte ainsi, via des signaux corrélables.
+
+## 3 piliers
+- Metrics : mesures numériques agrégées (RPS, latence P95, erreurs).
+- Logs : événements détaillés.
+- Traces : parcours d’une requête (end-to-end).
+
+## PromQL (rappels)
+- PromQL est le langage de requête Prometheus pour interroger des séries temporelles.
+- `rate(counter[5m])` : débit par seconde moyen d’un compteur.
+- `increase(counter[5m])` : total sur la période.
+- `histogram_quantile(0.95, sum(rate(x_bucket[5m])) by (le))` : estimation d’un P95 à partir des buckets d’un histogramme.
+
+## Requêtes clés (exemples)
+- Total items créés : `items_created_total`
+- Items/s : `rate(items_created_total[5m])`
+- RPS : `sum(rate(http_requests_total[5m]))`
+- 5xx% : `(sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))) * 100`
+- P95 HTTP : `histogram_quantile(0.95, sum(rate(http_request_duration_highr_seconds_bucket[5m])) by (le))`
+- P95 DB : `histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le))`

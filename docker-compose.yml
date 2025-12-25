@@ -5,10 +5,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # Option simple: SQLite dans le conteneur
       - DATABASE_URL=sqlite:///./app.db
     volumes:
-      # Persiste le sqlite si tu veux garder les données entre redémarrages
       - api_data:/app
     networks:
       - monitoring
@@ -28,9 +26,26 @@ services:
     networks:
       - monitoring
 
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
 volumes:
   prometheus_data:
   api_data:
+  grafana_data:
 
 networks:
   monitoring:
